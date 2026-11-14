@@ -1,0 +1,49 @@
+[Unit]
+Description=otgw2mqtt - OpenTherm Gateway (otmonitor) to MQTT / InfluxDB / Home Assistant bridge
+Documentation=file:///opt/otgw2mqtt/README.md
+Wants=network-online.target
+After=network-online.target mosquitto.service influxdb.service
+
+[Service]
+# The script reports READY=1 / STATUS= / STOPPING=1 via sd_notify and pings the watchdog
+Type=notify
+NotifyAccess=main
+WatchdogSec=30
+# Run as a transient unprivileged user allocated at start; no system user needed. This also implies
+# NoNewPrivileges=yes, ProtectSystem=strict, ProtectHome=read-only, PrivateTmp=yes, RemoveIPC=yes and
+# RestrictSUIDSGID=yes. otgw2mqtt dir must be world-readable (except the env file, see below).
+DynamicUser=yes
+WorkingDirectory=/opt/otgw2mqtt
+# Settings are read by systemd (as root), so the file can be root:root 0600
+EnvironmentFile=/etc/homeautomation/otgw2mqtt.env
+Environment=PYTHONUNBUFFERED=1
+# The filesystem is read-only for the service; don't try to write __pycache__
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/otgw2mqtt/.venv/bin/python /opt/otgw2mqtt/otgw2mqtt.py
+Restart=always
+RestartSec=10
+# The script releases the override and marks itself offline on SIGTERM; give it time
+TimeoutStopSec=15
+
+# Optional: classic logging to a file in addition to the journal. Uncomment LogsDirectory= (creates
+# /var/log/otgw2mqtt, writable by the dynamic user) and append "-l /var/log/otgw2mqtt/otgw2mqtt.log" to ExecStart=.
+#LogsDirectory=otgw2mqtt
+
+# Hardening - run least-privilege
+ProtectHome=yes
+ProtectProc=invisible
+ProcSubset=pid
+PrivateDevices=yes
+PrivateUsers=yes
+# AF_UNIX is needed for the sd_notify socket.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

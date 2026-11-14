@@ -1,0 +1,8 @@
+otgw2mqtt.env
+.venv/
+__pycache__/
+*.log
+otgw2mqtt-old.py
+otgw2mqtt-config.yaml
+CLAUDE.md
+.vscode/
