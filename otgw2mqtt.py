@@ -58,11 +58,6 @@ SPIKE_CONFIRM = 3            # consecutive consistent readings needed to accept 
 PURGE_IDLE = 2.0             # --purge: stop collecting retained messages after this long without a new one
 PURGE_MAX = 30.0             # --purge: ... or after this long in total
 
-# otmonitor's MQTT action for the OTGW 'CS' command (fixed in otmonitor's mqtt.tcl, not configurable there)
-OTMONITOR_CS_ACTION = "ctrlsetpt"
-OBSOLETE_SETTINGS = {"OTMONITOR_CS_ACTION": f"otmonitor's control setpoint action is always '{OTMONITOR_CS_ACTION}'"}
-
-
 # --------------------------------------------------------------------------------------------------
 # Configuration
 # --------------------------------------------------------------------------------------------------
@@ -165,12 +160,12 @@ class Config:  # pylint: disable=too-many-instance-attributes
       outdoor_json_key=_env_str(env, "OUTDOOR_JSON_KEY"),
       otgw_host=_env_str(env, "OTGW_HOST"),
       otgw_port=_env_int(env, "OTGW_PORT", 7686),
-      influx_host=_env_str(env, "INFLUX_HOST"),
-      influx_port=_env_int(env, "INFLUX_PORT", 8086),
-      influx_username=_env_str(env, "INFLUX_USERNAME"),
-      influx_password=_env_str(env, "INFLUX_PASSWORD"),
-      influx_database=_env_str(env, "INFLUX_DATABASE", "sensors"),
-      influx_measurement=_env_str(env, "INFLUX_MEASUREMENT", "environmental"),
+      influx_host=_env_str(env, "INFLUXDB_HOST"),
+      influx_port=_env_int(env, "INFLUXDB_PORT", 8086),
+      influx_username=_env_str(env, "INFLUXDB_USERNAME"),
+      influx_password=_env_str(env, "INFLUXDB_PASSWORD"),
+      influx_database=_env_str(env, "INFLUXDB_DATABASE", "sensors"),
+      influx_measurement=_env_str(env, "INFLUXDB_MEASUREMENT", "environmental"),
       ha_enabled=_env_bool(env, "HA_ENABLED", True),
       ha_discovery_prefix=_env_str(env, "HA_DISCOVERY_PREFIX", "homeassistant"),
       override_min=_env_float(env, "OVERRIDE_MIN", 10.0),
@@ -694,7 +689,7 @@ class InfluxWriter:
 
   async def run(self):
     if not self.enabled:
-      logger.info("InfluxDB disabled (INFLUX_HOST empty)")
+      logger.info("InfluxDB disabled (INFLUXDB_HOST empty)")
       return
     while True:
       with contextlib.suppress(TimeoutError):
@@ -945,7 +940,7 @@ class Bridge:  # pylint: disable=too-many-instance-attributes,too-many-public-me
       await self.publish(topic, b"", retain=True, qos=1)
 
   async def send_control_setpoint(self, value: float) -> bool:
-    topic = f"{self.cfg.otmonitor_action_topic}/{OTMONITOR_CS_ACTION}"
+    topic = f"{self.cfg.otmonitor_action_topic}/ctrlsetpt"
     # A release is sent as the plain integer 0 (OTGW "CS=0"), as documented for the gateway
     ok = await self.publish(topic, {"name": "temp", "type": "float", "value": round(value, 2) if value else 0})
     if ok:
@@ -1376,9 +1371,6 @@ def main(argv: list[str] | None = None) -> int:
   except ConfigError as e:
     logger.error("Configuration error: %s", e)
     return 2
-  for name, reason in OBSOLETE_SETTINGS.items():
-    if name in os.environ:
-      logger.warning("Ignoring obsolete setting %s (%s); remove it from the env file", name, reason)
 
   if args.purge:
     return asyncio.run(purge_retained(cfg, args.dryrun))

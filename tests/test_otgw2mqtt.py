@@ -412,7 +412,7 @@ class RecordingBridge(og.Bridge):
 class TestBridge(unittest.IsolatedAsyncioTestCase):
   async def asyncSetUp(self):
     self.clock = FakeClock()
-    self.cfg = make_cfg(INFLUX_HOST="influx", OUTDOOR_TOPIC="sensors/out", OUTDOOR_JSON_KEY="temperature_C",
+    self.cfg = make_cfg(INFLUXDB_HOST="influx", OUTDOOR_TOPIC="sensors/out", OUTDOOR_JSON_KEY="temperature_C",
                         OTGW_HOST="otgw", OVERRIDE_MAX="35")
     self.influx = og.InfluxWriter(self.cfg, dryrun=True)
     self.bridge = RecordingBridge(self.cfg, self.influx, dryrun=True, clock=self.clock)

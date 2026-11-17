@@ -100,11 +100,11 @@ All settings are environment variables, normally kept in `otgw2mqtt.env`. See
 | `HEARTBEAT` | `55` | Unchanged values are re-published / re-written at most this often (s); `0` = always |
 | `OUTDOOR_TOPIC` | empty | External outdoor temperature topic; empty disables |
 | `OUTDOOR_JSON_KEY` | empty | JSON key (dotted path allowed) holding the temperature; empty = plain number |
-| `INFLUX_HOST` | empty | InfluxDB 1.x host; empty disables InfluxDB |
-| `INFLUX_PORT` | `8086` | |
-| `INFLUX_USERNAME` / `INFLUX_PASSWORD` | empty | |
-| `INFLUX_DATABASE` | `sensors` | |
-| `INFLUX_MEASUREMENT` | `environmental` | |
+| `INFLUXDB_HOST` | empty | InfluxDB 1.x host; empty disables InfluxDB |
+| `INFLUXDB_PORT` | `8086` | |
+| `INFLUXDB_USERNAME` / `INFLUXDB_PASSWORD` | empty | |
+| `INFLUXDB_DATABASE` | `sensors` | |
+| `INFLUXDB_MEASUREMENT` | `environmental` | |
 | `HA_ENABLED` | `true` | Publish Home Assistant discovery |
 | `HA_DISCOVERY_PREFIX` | `homeassistant` | |
 | `HA_UPDATE_INTERVAL` | `10` | Numeric values go to MQTT / HA at most once per N seconds (time-weighted average); `0` = no limit |
@@ -192,7 +192,7 @@ Numeric (float) values are published to `OUT_TOPIC/<name>` at most once per `HA_
 
 ## InfluxDB
 
-One point per value: measurement `INFLUX_MEASUREMENT`, tags `host` and `id` (= `BOILER_NAME`), field `<name>`, time from
+One point per value: measurement `INFLUXDB_MEASUREMENT`, tags `host` and `id` (= `BOILER_NAME`), field `<name>`, time from
 otmonitor's timestamp. Writes are batched every 5 s and run off the event loop; on failures up to 10 000 points are
 buffered and retried.
 

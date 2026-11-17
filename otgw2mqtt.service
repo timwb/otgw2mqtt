@@ -13,13 +13,15 @@ WatchdogSec=30
 # NoNewPrivileges=yes, ProtectSystem=strict, ProtectHome=read-only, PrivateTmp=yes, RemoveIPC=yes and
 # RestrictSUIDSGID=yes. otgw2mqtt dir must be world-readable (except the env file, see below).
 DynamicUser=yes
+# Base path: everything else is relative to it. systemd doesn't allow a relative or variable executable,
+# so /usr/bin/env resolves .venv/bin/python against the working directory.
 WorkingDirectory=/opt/otgw2mqtt
+ExecStart=/usr/bin/env .venv/bin/python otgw2mqtt.py
 # Settings are read by systemd (as root), so the file can be root:root 0600
 EnvironmentFile=/etc/homeautomation/otgw2mqtt.env
 Environment=PYTHONUNBUFFERED=1
 # The filesystem is read-only for the service; don't try to write __pycache__
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/opt/otgw2mqtt/.venv/bin/python /opt/otgw2mqtt/otgw2mqtt.py
 Restart=always
 RestartSec=10
 # The script releases the override and marks itself offline on SIGTERM; give it time
